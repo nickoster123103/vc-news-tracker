@@ -295,10 +295,12 @@ ALREADY COVERED:
 
     response = client.messages.create(
         model=MODEL,
-        max_tokens=2048,
+        max_tokens=4096,
         tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": WEB_SEARCH_MAX_USES}],
         messages=[{"role": "user", "content": prompt}],
     )
+    if response.stop_reason == "max_tokens":
+        print("Warning: additional-source search hit the max_tokens cap and was truncated.", file=sys.stderr)
     text = "".join(block.text for block in response.content if block.type == "text")
     parsed = _extract_json(text)
     if not isinstance(parsed, list):
@@ -342,7 +344,9 @@ HEADLINES:
 {numbered}
 """
 
-    response = client.messages.create(model=MODEL, max_tokens=1024, messages=[{"role": "user", "content": prompt}])
+    response = client.messages.create(model=MODEL, max_tokens=4096, messages=[{"role": "user", "content": prompt}])
+    if response.stop_reason == "max_tokens":
+        print("Warning: duplicate check hit the max_tokens cap and was truncated.", file=sys.stderr)
     text = "".join(block.text for block in response.content if block.type == "text")
     parsed = _extract_json(text)
     if not isinstance(parsed, dict) or not isinstance(parsed.get("duplicate_groups"), list):
@@ -427,11 +431,15 @@ only, not to be listed as "today's" news):
 {recent_block}
 """
 
-    message = client.messages.create(
+    # Streamed, and with a generous ceiling: Sonnet 5 runs adaptive thinking by default, and on
+    # a heavy news day that reasoning alone can consume a smaller budget before any answer text
+    # is written — max_tokens=8192 was observed to do exactly that (truncated with zero output).
+    with client.messages.stream(
         model=MODEL,
-        max_tokens=8192,
+        max_tokens=20000,
         messages=[{"role": "user", "content": prompt}],
-    )
+    ) as stream:
+        message = stream.get_final_message()
     if message.stop_reason == "max_tokens":
         print("Warning: digest generation hit the max_tokens cap and was truncated.", file=sys.stderr)
     return "".join(block.text for block in message.content if block.type == "text")

@@ -2,8 +2,8 @@
 .env.local
 **/*.local
 
-# Generated output
-output/
+# output/ and docs/ are committed on purpose — they're the persistent digest archive and
+# the published site, and GitHub Actions starts from a fresh checkout each run.
 
 # Python
 __pycache__/

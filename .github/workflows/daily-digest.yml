@@ -1,0 +1,65 @@
+name: Daily Venture News Digest
+
+on:
+  schedule:
+    # GitHub Actions cron is fixed UTC and doesn't shift for daylight saving, so two entries
+    # are needed to hit 7:30am America/New_York year-round: one for EDT, one for EST. The
+    # "Determine whether to run" step below skips whichever one doesn't match local time.
+    - cron: "30 11 * * *" # 7:30am EDT (UTC-4), roughly mid-March to early November
+    - cron: "30 12 * * *" # 7:30am EST (UTC-5), roughly early November to mid-March
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine whether to run
+        id: gate
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          hour="$(TZ=America/New_York date +%H)"
+          if [ "$hour" = "07" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.gate.outputs.should_run == 'true'
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        if: steps.gate.outputs.should_run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        if: steps.gate.outputs.should_run == 'true'
+        run: python -m pip install -r requirements.txt
+
+      - name: Run news tracker
+        if: steps.gate.outputs.should_run == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SEC_EDGAR_CONTACT: ${{ secrets.SEC_EDGAR_CONTACT }}
+        run: python news_tracker.py
+
+      - name: Publish site
+        if: steps.gate.outputs.should_run == 'true'
+        run: python publish_site.py
+
+      - name: Commit and push updated digest + site
+        if: steps.gate.outputs.should_run == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add output/ docs/
+          git diff --cached --quiet || git commit -m "Daily venture news digest $(TZ=America/New_York date +%Y-%m-%d)"
+          git push

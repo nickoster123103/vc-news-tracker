@@ -128,7 +128,7 @@ def masthead(tagline: str) -> str:
     """Shared page header: kicker, title, tagline, and the skyline divider graphic."""
     return f"""
 <header class="masthead">
-  <div class="kicker">New York · Startups · Venture Capital</div>
+  <div class="kicker">Startups · Venture Capital</div>
   <h1>Venture News Tracker 🗽</h1>
   <p class="tagline">{tagline}</p>
   {SKYLINE_SVG}
@@ -197,7 +197,7 @@ def build_site() -> None:
         f'<li><a href="{iso_date}.html">{iso_date}</a></li>' for iso_date, _ in files
     )
     index_body = f"""
-{masthead("Daily AI-generated VC/startup/tech news, out of the city that never sleeps.")}
+{masthead("Daily AI-generated VC/startup/tech news.")}
 <h2>Latest — {latest_date}</h2>
 {latest_html}
 <h2>Archive</h2>

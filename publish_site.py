@@ -21,7 +21,7 @@ REPO_URL = "https://github.com/nickoster123103/vc-news-tracker"
 FONT_LINKS = """
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 """
 
 # A minimal, full-bleed skyline silhouette (buildings + a spired tower, à la the Empire State
@@ -79,7 +79,7 @@ STYLE = """
     body {
         max-width: 720px; margin: 0 auto; padding: 0 1.25rem 3rem;
         background: var(--bg); color: var(--text);
-        font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family: "Literata", Georgia, "Times New Roman", serif;
         font-size: 1.05rem; line-height: 1.6;
     }
     header.masthead { padding-top: 2rem; }
